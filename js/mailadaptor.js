@@ -82,7 +82,7 @@ $(function() {
             	name : $("input#name").val(),
             	email : $("input#email").val(),
             	phone : $("input#phone").val(),
-            	message : $("textarea#messg").val(),
+            	messg : $("textarea#messg").val(),
             	firstName : $("input#name").val(), // For Success/Failure Message
             }
             // Check for white space in name for Success/Fail message
