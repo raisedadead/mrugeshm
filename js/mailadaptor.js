@@ -1,67 +1,29 @@
 
-/*
- * Contacts Model
- */
+// Contacts Model
 var contactModel = Backbone.Model.extend({
-		defaults: {
-			name  : '',
-			email : '',
-            phone : '',
-            messg : ''
-		}
-	});
+    defaults: {
+        name  : '',
+        email : '',
+        phone : '',
+        messg : ''
+    }
+});
 
-/*
- * Contacts Collection
- */
+
+// Contacts Collection
 var contactCollection = Backbone.Firebase.Collection.extend({
     model: contactModel,
     url: 'https://mrugeshm.firebaseio.com/contacts',
     autoSync: false
 });
 
-// Form View
-var FormView = Backbone.View.extend({
+// Start 
+var initMailApp = function( $form , data ) {
+    
+    if( !$form.collection )
+  	 $form.collection = new contactCollection();
   
-    el: $('#contactForm'),
-  
-    events: {
-    "click #sendBtn" : "createContact",
-    },
-    
-    initialize: function() {
-        this.name   = this.$("#name");
-        this.email  = this.$("#email");
-        this.phone  = this.$("#phone");
-        this.messg  = this.$("#messg");
-    },
-    
-    createContact: function(e) {
-        
-        if ( !this.name.val() || !this.email.val() || !this.phone.val() || !this.messg.val() ) { 
-            return; 
-        }
-        
-        var result = this.collection.create({
-            name  : this.name.val(),
-			email : this.email.val(),
-            phone : this.phone.val(),
-            messg : this.messg.val()
-        });
-     
-        if(result){
-            this.success();
-        }else{
-            this.error();
-        }
-        
-        this.name.val('');
-        this.email.val('');
-        this.phone.val('');
-        this.messg.val('');
-    },
-    
-    success: function() {
+    var displaySuccess = function() {
         // Success message
         $('#success').html("<div class='alert alert-success'>");
         $('#success > .alert-success').html("<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;")
@@ -70,12 +32,12 @@ var FormView = Backbone.View.extend({
             .append("<strong>Your message has been sent. </strong>");
         $('#success > .alert-success')
             .append('</div>');
-
+    
         //clear all fields
-        $('#contactForm').trigger("reset");
-        
-    },
-    error: function() {
+        $('#contactForm').trigger("reset");      
+    }
+
+    var displayError = function() {
         // Fail message
         $('#success').html("<div class='alert alert-danger'>");
         $('#success > .alert-danger').html("<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;")
@@ -84,15 +46,26 @@ var FormView = Backbone.View.extend({
         $('#success > .alert-danger').append('</div>');
         //clear all fields
         $('#contactForm').trigger("reset");
-    },
-});
+    }
 
-// Start
-var initMailApp = function() {
-  var collection = new contactCollection();
-  var app = new FormView({ collection: collection });
+
+    var result = $form.collection.create({
+        name  : data.name,
+    	email : data.email,
+        phone : data.phone,
+        messg : data.messg
+    });
+ 
+    if(result){
+        displaySuccess();
+    }else{
+        displayError();
+    }
+
+    $form.submitStatus = true;
 }
 
+// On Ready
 $(function() {
 
     $("input,textarea").jqBootstrapValidation({
@@ -101,19 +74,26 @@ $(function() {
             // additional error messages or events
         },
         submitSuccess: function($form, event) {
+            
             event.preventDefault(); // prevent default submit behaviour
+            
             // get values from FORM
-            var name = $("input#name").val();
-            var email = $("input#email").val();
-            var phone = $("input#phone").val();
-            var message = $("textarea#message").val();
-            var firstName = name; // For Success/Failure Message
+            var data = {
+            	name : $("input#name").val(),
+            	email : $("input#email").val(),
+            	phone : $("input#phone").val(),
+            	message : $("textarea#messg").val(),
+            	firstName : $("input#name").val(), // For Success/Failure Message
+            }
             // Check for white space in name for Success/Fail message
-            if (firstName.indexOf(' ') >= 0) {
-                firstName = name.split(' ').slice(0, -1).join(' ');
+            if (data.firstName.indexOf(' ') >= 0) {
+                data.firstName = data.name.split(' ').slice(0, -1).join(' ');
             }
             
-            if(initMailApp !== undefined) initMailApp();
+            // Check and initiate the contact addition
+            if( $form.submitStatus === undefined || $form.submitStatus === false ) {
+            	initMailApp( $form, data );
+            }
         },
         filter: function() {
             return $(this).is(":visible");
